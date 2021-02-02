@@ -139,8 +139,10 @@ class LinearSearch(object):
         i = 0
         crit = 1000
 
-        #print('iter \\  f \\ ||p_k|| \\ alpha \\ #func \\ ||grad_f||')
+        print('Direction:' + method)
+        print('=========================================================')
         _print_first_iter()
+        print('----------------------------------------------------------')
 
         while crit > tol:
 
@@ -165,7 +167,11 @@ class LinearSearch(object):
 
             if i > max_it:
                 break
+        print('----------------------------------------------------------')
+        print('Last iteration')
         _print_each_iter(i, self.objective.f(xk1), grad_norm, alpha_k, fval, crit)
+        print('----------------------------------------------------------')
+
 
 def _print_first_iter():
     print('iter '
@@ -192,13 +198,13 @@ rho = 0.5
 c = 10e-4
 
 LSinst = LinearSearch(rho, c, alpha_bar, 2)
-LSinst.main_loop(x_0, tol, max_it, method='Steepest')
+LSinst.main_loop(x_0, tol, max_it, method='Newton')
 
 
 N = 100
 x_0n =-np.ones(100)
 
 LSinst = LinearSearch(rho, c, alpha_bar, N)
-LSinst.main_loop(x_0n, tol, max_it, method='Steepest')
+LSinst.main_loop(x_0n, tol, max_it, method='Newton')
 
 
