@@ -115,7 +115,7 @@ class TrustRegion(object):
     def step_inner_loop_CG(self, z_j, d_j, r_j, x_k, delta, tol):
 
         if d_j.T @ self.obj.d_delta_f(x_k) @ d_j <=0:
-            print('Negative curvature')
+            #print('Negative curvature')
             tau = self.minimize_tau(z_j, d_j, x_k, delta)
             assert  tau >0
 
@@ -123,10 +123,9 @@ class TrustRegion(object):
             return p_k, 1
         else:
             alpha_j = ((r_j**2).sum()/(d_j[:, np.newaxis].T @ self.obj.d_delta_f(x_k) @ d_j[:, np.newaxis])).flatten()
-            print(alpha_j.shape)
             z_j1 = z_j + alpha_j * d_j
             if np.linalg.norm(z_j1) >= delta:
-                print('Outside tr')
+                #print('Outside tr')
                 tau = self.solve_tau_norm(z_j, d_j, delta)
                 assert tau > 0
                 p_k = z_j + tau * d_j
@@ -136,12 +135,12 @@ class TrustRegion(object):
                 r_j1 = r_j + alpha_j * self.obj.d_delta_f(x_k) @ d_j
                 #print(tol, np.linalg.norm(r_j1))
                 if np.linalg.norm(r_j1) < tol:
-                    print('Tolerance is satisfied')
+                    #print('Tolerance is satisfied')
                     p_k = z_j1
                     assert np.linalg.norm(p_k) <= delta
                     return p_k, 1
                 else:
-                    print('Compute new direction')
+                    #print('Compute new direction')
                     beta_j1 = (r_j1**2).sum()/(r_j**2).sum()
                     d_j1 = -r_j1 + beta_j1*d_j
                     return z_j1, d_j1, r_j1, 0
@@ -174,10 +173,12 @@ class TrustRegion(object):
 
         it = 1
         while crit > tol and it < 1000:
-            print(crit, it, delta_k)
-            p_k, gg = self.inner_loop(x_k, delta_k)
+            #print(crit, it, delta_k)
+            p_k, cg_iter = self.inner_loop(x_k, delta_k)
             x_k1, delta_k1 = self.update_trust_region(x_k, p_k, delta_k)
 
+            tol_cg = np.minimum(0.3, np.linalg.norm(self.obj.delta_f(x_k))**(1/2))*np.linalg.norm(self.obj.delta_f(x_k))
+            _print_each_iter(it, self.obj.f(x_k1), np.linalg.norm(self.obj.delta_f(x_k1)), tol_cg,  cg_iter)
             crit = np.linalg.norm(self.obj.delta_f(x_k1))
             x_k = x_k1
             delta_k = delta_k1
@@ -187,6 +188,20 @@ class TrustRegion(object):
         return x_k, self.obj.delta_f(x_k)
 
 
+def _print_first_iter():
+    print('iter '
+         + 'f            '
+         + '||grad_f||   '
+         + 'CG tol  '
+         + 'CG iterations' )
+
+    pass
+
+def _print_each_iter(i, obj,  grad_norm, epsilon, cg_iter):
+
+    print('%i   %4.04e   %4.04e   %4.04f      %i' % (i, obj,  grad_norm, epsilon, cg_iter))
+
+    pass
 
 N = 1000
 delta_hat = 100
@@ -195,6 +210,11 @@ eta = 0.1
 x_0 = np.ones(N)
 
 tr_instance = TrustRegion(N, delta_hat, eta)
+
+print('Trust-Region CG')
+print('=========================================================')
+_print_first_iter()
+print('----------------------------------------------------------')
 
 x_star, delta_x_star = tr_instance.outer_loop(x_0, delta_0)
 
