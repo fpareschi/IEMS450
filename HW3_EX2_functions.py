@@ -122,7 +122,8 @@ class TrustRegion(object):
             p_k = z_j + d_j * tau
             return p_k, 1
         else:
-            alpha_j = (r_j**2).sum()/(d_j.T @ self.obj.d_delta_f(x_k) @ d_j)
+            alpha_j = ((r_j**2).sum()/(d_j[:, np.newaxis].T @ self.obj.d_delta_f(x_k) @ d_j[:, np.newaxis])).flatten()
+            print(alpha_j.shape)
             z_j1 = z_j + alpha_j * d_j
             if np.linalg.norm(z_j1) >= delta:
                 print('Outside tr')
@@ -132,8 +133,8 @@ class TrustRegion(object):
                 assert np.linalg.norm(p_k) <= delta + 1e-5
                 return p_k, 1
             else:
-                r_j1 = r_j + alpha_j * self.obj.delta_f(x_k) @ d_j
-                print(tol, np.linalg.norm(r_j1))
+                r_j1 = r_j + alpha_j * self.obj.d_delta_f(x_k) @ d_j
+                #print(tol, np.linalg.norm(r_j1))
                 if np.linalg.norm(r_j1) < tol:
                     print('Tolerance is satisfied')
                     p_k = z_j1
@@ -197,4 +198,4 @@ tr_instance = TrustRegion(N, delta_hat, eta)
 
 x_star, delta_x_star = tr_instance.outer_loop(x_0, delta_0)
 
-p, it = tr_instance.inner_loop(x_0, delta_0)
+#p, it = tr_instance.inner_loop(x_0, delta_0)
